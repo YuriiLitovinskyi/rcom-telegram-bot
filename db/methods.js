@@ -26,9 +26,10 @@ function readJournal(journal, timer){
 */
 function updateJournalCollection(journal){
     return new Promise(async (resolve, reject) => {
-        try {            
+        try {
+            const count = await journal.count();         
             await journal.updateMany({}, { $set: { isSentTelBot: true } });
-            resolve('RCOM Journal collection updated');
+            resolve(`RCOM Journal collection: updated ${count} documents`);
         } catch (error) {
             reject(error);
         };
@@ -154,7 +155,7 @@ function updateDeviceSerialPass(deviceSerial, devicePassword, chatId){
 function deleteUser(chatId){
     return new Promise(async (resolve, reject) => {
         try {
-            const res = await UserModel.findOneAndDelete({ user_id: chatId });            
+            const res = await UserModel.findOneAndRemove({ user_id: chatId });  // findOneAndRemove  // findOneAndDelete - for mongoose ver ^5.x          
 
             resolve(`User "${res.first_name}, ${res.phone_number}" unsubscribed! All user data deleted!`);
         } catch (error) {            

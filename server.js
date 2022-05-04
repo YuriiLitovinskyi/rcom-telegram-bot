@@ -46,9 +46,15 @@ connectDb(mongoHost, mongoPort, async (connection) => {
     mongoRcomConnection = connection;    
     const journal = mongoRcomConnection.db.collection('Journal');
     
+    
     try {
-        const journalUpd = await updateJournalCollection(journal);    
-       
+        const isCapped = await journal.isCapped();
+        if(isCapped){            
+            const error = `MongoError: Cannot update Journal collection (collection is Capped). Please try another MongoDB version.`;
+            await createError(error);
+        };
+
+        const journalUpd = await updateJournalCollection(journal); 
         console.log(journalUpd.cyan);
         logger.info(journalUpd);
     
@@ -318,7 +324,7 @@ app.listen(serverPort, async () => {
         
             if(!user.deviceSerial || !user.devicePassword){
                 bot.sendMessage(chatId, `Помилка виконання! \nВiдсутнi серійний номер та пароль приладу! Будь ласка, введіть у форматі [serial]:[pass]. 
-                \nНаприклад: \n/addserialpass 3389:123456"`);
+                \nНаприклад: \n/addserialpass 3389:123456`);
                return; 
             };
 

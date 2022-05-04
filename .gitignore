@@ -1,4 +1,6 @@
 node_modules/
 rcom-telegram-bot.exe
+rcom-telegram-bot-x64.exe
+rcom-telegram-bot-x86.exe
 .env
 rcombot.log
