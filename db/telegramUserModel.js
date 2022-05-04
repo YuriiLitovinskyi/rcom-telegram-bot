@@ -10,7 +10,9 @@ const telegramUserSchema = mongoose.Schema({
         required: [true, 'Please add user chat id']
     },
     first_name: String,
-    deviceNumber: Number
+    deviceNumber: Number,
+    deviceSerial: String,
+    devicePassword: String
 }, {
     timestamps: true
 });

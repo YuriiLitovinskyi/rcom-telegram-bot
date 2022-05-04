@@ -1,0 +1,14 @@
+Програма читає колекцію Journal бази RCOMу по таймауту timer.
+Вибирає найновіші повідомлення, дивиться чи isSentTelBot: true. Якщо ні - відсилає повідомлення та встановлює isSentTelBot: true.
+При кожному запуску вся колекція Journal оновлюється на  isSentTelBot: true (для того щоб не було спаму при зміні системного часу).
+Всі дані, помилки логуються у файл rcombot.log.
+
+
+Помилки, які призводять до крешу:
+Якщо немає телеграм токена => Error: Error: No telegram token in .env file! Application will be closed in 20 seconds
+Якщо телеграм токен не валідний => помилка Error: ETELEGRAM: 401 Unauthorized, програма закривається.
+Якщо немає конекту до бази => Error: MongoDB connection error: MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017
+Якщо на ходу закрили базу монго (рком) => Error: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017
+Якщо порт серверу зайнятий => Error: Error: listen EADDRINUSE: address already in use :::4622
+
+Помилки із запитами в базу (додати/видалити користувача, запит стану ппк...) пишуться в логи, але програму не крешать.

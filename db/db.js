@@ -1,18 +1,19 @@
 const mongoose = require('mongoose');
-const sleep = require('../helpers/sleep');
+const { logger } = require('../helpers/logger');
+const { createError } = require('../helpers/createError');
 
 const connectDB = async (host, port, callback) => {
     try {
         const url = `mongodb://${host}:${port}/DBClientsPPK`;
         const conn = await mongoose.connect(url);
 
-        console.log(`Connected to MongoDB, host: ${conn.connection.host}, port: ${conn.connection.port}`.cyan);
+        const msg = `Connected to MongoDB, host: ${conn.connection.host}, port: ${conn.connection.port}`;
+        console.log(msg.cyan);
+        logger.info(msg);
         return callback(conn.connection);
-    } catch (error) {      
-        console.log(`Error: ${error}`.red);
-        console.log('Application will be closed in 20 seconds');
-        await sleep(20000);
-        process.exit(1);
+    } catch (error) {
+        const msgErr = `MongoDB connection error: ${error}`;
+        await createError(msgErr);   
     };
 };
 

@@ -1,13 +1,13 @@
-const UserModel = require('./model/telegramUserModel');
+const UserModel = require('./telegramUserModel');
 
-// check for new documents in RCOM Journal collections
-function readJournal(connection){
-    return new Promise((resolve, reject) => {
-        try {            
-            const collection = connection.db.collection('Journal');
-            const currentDate = new Date().toISOString();
-            
-            collection.find({date_time: { $gte: currentDate }}).toArray((err, data) => {
+// @collection Journal
+// check for new documents in RCOM Journal collection
+function readJournal(journal, timer){
+    return new Promise(async (resolve, reject) => {
+        try {       
+            const currentDate = new Date(Date.now() - timer);       
+                     
+            await journal.find({date_time: { $gte: currentDate }}).toArray((err, data) => {
                 if(err) reject(err);
 
                 resolve(data);
@@ -18,6 +18,74 @@ function readJournal(connection){
     });
 };
 
+/**
+ * Initialize all docs in collection Journal to "isSentTelBot: true" in the beginning. It is needed to avoid spam messages to users!
+ * @param {*} journal - RCOM collection
+ * @returns {promise}
+ * @collection Journal
+*/
+function updateJournalCollection(journal){
+    return new Promise(async (resolve, reject) => {
+        try {            
+            await journal.updateMany({}, { $set: { isSentTelBot: true } });
+            resolve('RCOM Journal collection updated');
+        } catch (error) {
+            reject(error);
+        };
+    });
+};
+
+// @collection Journal
+function updateJournalDoc(journal, _id){
+    return new Promise(async (resolve, reject) => {
+        try {
+            await journal.updateOne({ _id }, { $set: { isSentTelBot: true } });
+            resolve(`Journal single document ${_id} updated`);
+        } catch (error) {
+            reject(error);
+        };
+    });
+};
+
+// @collection ppkState
+function getPpkState(ppkState, ppk_num){
+    return new Promise(async (resolve, reject) => {
+        try {
+            const currendDeviceState = await ppkState.findOne({ ppk_num });
+
+            resolve(currendDeviceState);
+        } catch (error) {
+            reject(error);
+        };
+    });
+};
+
+// @collection ppkCommandQueue
+// Send arm/disarm device groups
+function sendCommandToDevice(ppkCommandQueue, ppk_num, user_command, group_num, serial_num, ppk_pass){
+    return new Promise(async (resolve, reject) => {
+        try {
+            let command;
+            user_command === '/arm' ? command = 'ON' : command = 'OFF';
+
+            await ppkCommandQueue.insertOne({
+                ppkNum : ppk_num,
+                message: "TASK",
+                time: Date.now(),
+                task: `GROUP${group_num}_${command}`,   
+                mobileKey: serial_num.toString(),
+                password: ppk_pass.toString()
+            });
+
+            resolve(`Command "${user_command} ${group_num}" to device number "${ppk_num}"`);
+        } catch (error) {
+            reject(error);
+        };
+    });
+};
+
+
+// @collection: rcomtelegrambotusers
 function registerUser(userData){
     return new Promise(async (resolve, reject) => {
         try {
@@ -29,6 +97,7 @@ function registerUser(userData){
                 upsert: true, 
                 returnNewDocument: true  
             });
+
             resolve(`User "${userData.first_name}, ${userData.phone_number}" registered!`);                
         } catch (error) {
             reject(error);
@@ -36,7 +105,8 @@ function registerUser(userData){
     });
 };
 
-function updateDevice(deviceNumber, chatId){
+// @collection: rcomtelegrambotusers
+function updateDevice(deviceNumber, chatId){     
     return new Promise(async (resolve, reject) => {
         try {
             const user = await UserModel.findOneAndUpdate({
@@ -49,7 +119,30 @@ function updateDevice(deviceNumber, chatId){
                 upsert: false, 
                 returnNewDocument: true  
             });
-            resolve(`User "${user.first_name}, ${user.phone_number}" subscribed on device "${deviceNumber}"!`);                
+
+            resolve(`User "${user.first_name}, ${user.phone_number}" subscribed on device "${deviceNumber}"!`);                 
+        } catch (error) {
+            reject(error);
+        };
+    });
+};
+
+// @collection: rcomtelegrambotusers
+function updateDeviceSerialPass(deviceSerial, devicePassword, chatId){     
+    return new Promise(async (resolve, reject) => {
+        try {
+            const user = await UserModel.findOneAndUpdate({
+                user_id: chatId
+            }, {
+                $set: {
+                    deviceSerial,
+                    devicePassword
+                }
+            }, { 
+                upsert: false, 
+                returnNewDocument: true  
+            });
+            resolve(`User "${user.first_name}, ${user.phone_number}" added ppk serial "${deviceSerial}" and ppk password "${devicePassword}"!`);                
             
         } catch (error) {
             reject(error);
@@ -57,18 +150,20 @@ function updateDevice(deviceNumber, chatId){
     });
 };
 
-function deleteUser(chatId, firstName){
+// @collection: rcomtelegrambotusers
+function deleteUser(chatId){
     return new Promise(async (resolve, reject) => {
         try {
-            const res = await UserModel.deleteOne({ user_id: chatId });
+            const res = await UserModel.findOneAndDelete({ user_id: chatId });            
 
-            resolve(`User "${firstName}, id: ${chatId}" unsubscribed!`);
-        } catch (error) {
+            resolve(`User "${res.first_name}, ${res.phone_number}" unsubscribed! All user data deleted!`);
+        } catch (error) {            
             reject(error);
         };
     });
 };
 
+// @collection: rcomtelegrambotusers
 function findAllUsers(){
     return new Promise(async (resolve, reject) => {
         try {
@@ -81,10 +176,15 @@ function findAllUsers(){
     });
 };
 
-module.exports = {
+module.exports = {     
     readJournal,
+    updateJournalCollection,
+    updateJournalDoc,
+    getPpkState,
+    sendCommandToDevice,
     registerUser,
     updateDevice,
+    updateDeviceSerialPass,
     deleteUser,
-    findAllUsers
+    findAllUsers    
 };
