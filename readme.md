@@ -1,7 +1,8 @@
 ## RCOM HTTP Telegram bot server for sending messages to users 
 ***  
 ### Setup project: 
-&emsp;`npm i`     
+&emsp;`npm i mongoose@5.0` 
+&emsp;`npm i` 
 &emsp;`npm i pkg -g`
 
 ### Run project:

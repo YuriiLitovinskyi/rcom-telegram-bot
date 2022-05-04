@@ -289,7 +289,7 @@ app.listen(serverPort, async () => {
                     return;
                 };        
             
-                if(deviceState?.model === '4l'){
+                if(deviceState && deviceState.model === '4l'){
                     bot.sendMessage(chatId, 'Оберіть команду: ', buttonOptions4L);
                 } else {
                     bot.sendMessage(chatId, 'Оберіть команду: ', buttonOptions8L);
