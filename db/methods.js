@@ -5,7 +5,7 @@ const UserModel = require('./telegramUserModel');
 function readJournal(journal, timer){
     return new Promise(async (resolve, reject) => {
         try {       
-            const currentDate = new Date(Date.now() - timer);       
+            const currentDate = new Date(Date.now() - timer - 3000);       
                      
             await journal.find({date_time: { $gte: currentDate }}).toArray((err, data) => {
                 if(err) reject(err);
