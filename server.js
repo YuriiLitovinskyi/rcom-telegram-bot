@@ -28,10 +28,12 @@ const { createError } = require('./helpers/createError');
 
 const app = express();
 
-const version = '1.0.0';
+const version = '1.0.1';
+const author = 'Yurii Litovinskyi';
 console.log(`ver: ${version}`.grey);
 logger.info('******************************');
 logger.info(`Rcom telegram bot version: ${version}`);
+logger.info(`Author: ${author}`);
 const serverPort = process.env.SERVER_PORT || 4622;
 const mongoHost = process.env.MONGO_HOST || localhost;
 const mongoPort = process.env.MONGO_PORT || 27017;
@@ -139,6 +141,7 @@ app.listen(serverPort, async () => {
                 bot.sendMessage(chatId, 'Всі Ваші дані на сервері видалено! \nСповiщення припинено!');
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Видалення користувача"!');
             };
         });
         
@@ -165,6 +168,7 @@ app.listen(serverPort, async () => {
                 
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Реєстрація контактного номеру користувача"!');
             };        
         });
         
@@ -194,6 +198,7 @@ app.listen(serverPort, async () => {
                 await bot.sendMessage(chatId, `Ви успішно підписані на події приладу №${deviceNumber}!`);                
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Додавання приладу користувача"!');
             };    
         });
         
@@ -236,6 +241,7 @@ app.listen(serverPort, async () => {
                 await bot.sendMessage(chatId, `Серійний номер та пароль приладу збережено успішно!`);                
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Додавання серійного номеру та паролю приладу"!');
             };
         });
         
@@ -268,6 +274,7 @@ app.listen(serverPort, async () => {
                 logger.info(`User "${user.first_name}, ${user.phone_number}" requested device number "${user.deviceNumber}" state`);                
             } catch (error) {                
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Запит стану приладу користувача"!');
             };
         });
         
@@ -302,6 +309,7 @@ app.listen(serverPort, async () => {
                 };        
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Запит кнопок управління групами приладу"!');
             };
         });
         
@@ -360,6 +368,7 @@ app.listen(serverPort, async () => {
                 logger.info(`User "${user.first_name}, ${user.phone_number}" sent ${result}`);                
             } catch (error) {
                 logger.error(error);
+                bot.sendMessage(chatId, 'Помилка виконання операції "Постановка/Зняття груп приладу"!');
             };
         });
 

@@ -20,6 +20,7 @@ function readJournal(journal, timer){
 
 /**
  * Initialize all docs in collection Journal to "isSentTelBot: true" in the beginning. It is needed to avoid spam messages to users!
+ * If size is more then maxDocs - remove old documents
  * @param {*} journal - RCOM collection
  * @returns {promise}
  * @collection Journal
@@ -27,9 +28,24 @@ function readJournal(journal, timer){
 function updateJournalCollection(journal){
     return new Promise(async (resolve, reject) => {
         try {
-            const count = await journal.count();         
-            await journal.updateMany({}, { $set: { isSentTelBot: true } });
-            resolve(`RCOM Journal collection: updated ${count} documents`);
+            const count = await journal.count();
+
+            let maxDocs = 500000; // RCOM limits Journal collection to 2 millions documents, but only with Mongo version 3.0.7
+
+            if(count > maxDocs){
+                const docsToBeRemoved = await journal.find({}).sort({"date_time": 1}).limit(count - maxDocs).toArray();
+
+                const docsArrayIdsToBeRemoved = Array.from(docsToBeRemoved).map(a => a._id);
+                
+                await journal.remove({_id: { $in: docsArrayIdsToBeRemoved }});
+
+                await journal.updateMany({}, { $set: { isSentTelBot: true } });
+
+                resolve(`RCOM Journal collection: removed ${count - maxDocs} old documents, updated ${maxDocs} documents`);
+            } else {
+                await journal.updateMany({}, { $set: { isSentTelBot: true } });
+                resolve(`RCOM Journal collection: updated ${count} documents`);
+            };
         } catch (error) {
             reject(error);
         };
@@ -53,7 +69,7 @@ function getPpkState(ppkState, ppk_num){
     return new Promise(async (resolve, reject) => {
         try {
             const currendDeviceState = await ppkState.findOne({ ppk_num });
-
+            
             resolve(currendDeviceState);
         } catch (error) {
             reject(error);
